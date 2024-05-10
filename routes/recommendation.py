@@ -65,7 +65,7 @@ def load_m():
     # model.add( tf.keras.layers.Dense(64, activation = 'softmax'))
     # model.add( tf.keras.layers.Dense(32, activation = 'softmax'))
     model.add(tf.keras.layers.Dense(10, activation='softmax'))
-    model.compile(optimizer=tf.keras.optimizers.legacy.RMSprop(1e-4), loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer=tf.keras.optimizers.RMSprop(1e-4), loss='categorical_crossentropy', metrics=['accuracy'])
     # model.load_weights(filepath='model_weights/')
     url = 'https://drive.google.com/drive/folders/1ptqlr_T0XRs88FAoucKSf7pxcEixRZ9O'
     gdown.download_folder(url, quiet=True, use_cookies=False)

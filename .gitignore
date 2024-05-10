@@ -3,7 +3,7 @@ flask_session
 assets/rice_crop_stress_classifier_effnetv2_large.h5
 assets/efficientnetv2-s.h5
 trial.ipynb
-.env
+# .env
 RiceCrop_Disease_dataset-20231123T033617Z-001.zip
 RiceCrop_Disease_dataset
 dataset
