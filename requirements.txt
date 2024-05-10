@@ -1,7 +1,7 @@
 flask
 Flask
 opencv-python-headless
-tensorflow
+tensorflow==2.10.1
 numpy
 pymysql
 flask-cors

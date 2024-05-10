@@ -36,41 +36,40 @@ connection = connect(host=os.getenv("DATABASE_URL"),
 model=None
 # Define the function to handle the KerasLayer when loading the model
 def load_m():
-    # target_size = (384, 384)
-    # efficientnetv2 = tf.keras.applications.efficientnet_v2.EfficientNetV2S(
-    #                 include_top=False,
-    #                 weights='imagenet',
-    #                 input_tensor=None,
-    #                 input_shape=target_size+(3,),
-    #                 pooling='avg',
-    #                 # classes=1000,
-    #                 # classifier_activation='softmax',
-    #             )
-    # # Create a new model on top of EfficientNetV2
-    # model = tf.keras.Sequential()
-    # # model.add(tf.keras.layers.Input(target_size+(3,)))
-    # model.add(efficientnetv2)
-    # model.add(tf.keras.layers.Flatten())
-    # model.add(tf.keras.layers.BatchNormalization())
-    # # model.add(tf.keras.layers.Dropout(0.3))
-    # model.add(tf.keras.layers.Dense(1024, activation = 'relu'))
+    target_size = (384, 384)
+    efficientnetv2 = tf.keras.applications.efficientnet_v2.EfficientNetV2S(
+                    include_top=False,
+                    weights='imagenet',
+                    input_tensor=None,
+                    input_shape=target_size+(3,),
+                    pooling='avg',
+                    # classes=1000,
+                    # classifier_activation='softmax',
+                )
+    # Create a new model on top of EfficientNetV2
+    model = tf.keras.Sequential()
+    # model.add(tf.keras.layers.Input(target_size+(3,)))
+    model.add(efficientnetv2)
+    model.add(tf.keras.layers.Flatten())
+    model.add(tf.keras.layers.BatchNormalization())
     # model.add(tf.keras.layers.Dropout(0.3))
+    model.add(tf.keras.layers.Dense(1024, activation = 'relu'))
+    model.add(tf.keras.layers.Dropout(0.3))
+    model.add(tf.keras.layers.Dense(1024, activation = 'relu'))
+    # model.add(tf.keras.layers.Dropout(0.5))
     # model.add(tf.keras.layers.Dense(1024, activation = 'relu'))
-    # # model.add(tf.keras.layers.Dropout(0.5))
-    # # model.add(tf.keras.layers.Dense(1024, activation = 'relu'))
-    # # model.add(tf.keras.layers.Dropout(0.5))
-    # # model.add(tf.keras.layers.Dense(1024, activation = 'relu'))
-    # # model.add(tf.keras.layers.Dropout(0.5))
-    # # model.add(tf.keras.layers.Dense(512, activation = 'relu'))
-    # # model.add( tf.keras.layers.Dense(64, activation = 'softmax'))
-    # # model.add( tf.keras.layers.Dense(32, activation = 'softmax'))
-    # model.add(tf.keras.layers.Dense(10, activation='softmax'))
-    # model.compile(optimizer=tf.keras.optimizers.RMSprop(1e-4), loss='categorical_crossentropy', metrics=['accuracy'])
-    # # model.load_weights(filepath='model_weights/')
+    # model.add(tf.keras.layers.Dropout(0.5))
+    # model.add(tf.keras.layers.Dense(1024, activation = 'relu'))
+    # model.add(tf.keras.layers.Dropout(0.5))
+    # model.add(tf.keras.layers.Dense(512, activation = 'relu'))
+    # model.add( tf.keras.layers.Dense(64, activation = 'softmax'))
+    # model.add( tf.keras.layers.Dense(32, activation = 'softmax'))
+    model.add(tf.keras.layers.Dense(10, activation='softmax'))
+    model.compile(optimizer=tf.keras.optimizers.RMSprop(1e-4), loss='categorical_crossentropy', metrics=['accuracy'])
+    # model.load_weights(filepath='model_weights/')
     url = 'https://drive.google.com/drive/folders/1ptqlr_T0XRs88FAoucKSf7pxcEixRZ9O'
     gdown.download_folder(url, quiet=True, use_cookies=False)
-    # model.load_weights(filepath='model_weights/')
-    model = tf.keras.models.load_model('model_weights/model.h5')
+    model.load_weights(filepath='model_weights/')
     for layer in model.layers:
         layer.trainable = False
     return model
