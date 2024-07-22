@@ -119,7 +119,7 @@ def logout():
 
     except jwt.ExpiredSignatureError:
         error_message = str("Session expired. Please login again.")
-        return jsonify({'msg': error_message}), 400
+        return jsonify({'msg': error_message}), 401
 
     except Exception as e:
         print("Unhandled exception")
@@ -143,7 +143,7 @@ def get_user(user_id):
     
     except validation.InvalidLoginTokenException as e:
         error_message = str(e.message)
-        return jsonify({'msg': error_message}), 400
+        return jsonify({'msg': error_message}), 401
 
     except validation.IncorrectMethodException as e:
         error_message = str(e.message)
