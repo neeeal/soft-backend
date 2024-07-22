@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, request, jsonify, session, send_file, Blueprint
 import os
 import controllers.users as usersController
+import controllers.blacklist as blacklistController
 import middlewares.validation as validation
 import dotenv
 
@@ -48,8 +49,26 @@ def signup():
 
 @users_bp.route('/login', methods=['POST'])
 def login():
-    usersController.login()
-    return None
+    DATA = request.get_json()    
+    
+    try: 
+        correct_method = validation.is_POST(request.method)
+        complete_data = validation.login_data(DATA)
+        result = usersController.login(complete_data)
+    
+    except validation.InvalidCredentialsException as e:
+        error_message = str(e.message)
+        return jsonify({'msg': error_message}), 400
+    
+    except Exception as e:
+        print("Unhandled exception")
+        print(str(e))
+        return jsonify({'msg': "Internal server error"}), 500
+    
+    return jsonify({
+        'msg': "Successfully logged in.",
+        'data': result
+        }), 400
 
 @users_bp.route('/update_user', methods = ['GET', 'PUT'])
 def update_user():

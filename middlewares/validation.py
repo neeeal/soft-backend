@@ -20,6 +20,9 @@ class IncorrectDataException(CustomException):
 class AccountExistsException(CustomException):
     pass
 
+class InvalidCredentialsException(CustomException):
+    pass
+
 def secure_password(password):
     # Password Requirements:
     # at least 8 characters, one lowercase letter, one uppercase letter,
@@ -84,5 +87,17 @@ def signup_data(data):
     data['username'] = username_format(data['username'])
     data['password'] = secure_password(data['password'])
     data['email'] = email_format(data['email'])
+
+    return data
+
+def login_data(data):
+    if "password" not in data or len(data["password"].strip()) == 0:
+        raise IncorrectFieldsException("Incorrect field: password is missing or empty.")
+
+    if (
+        ("username" not in data or len(data["username"].strip()) == 0) and 
+        ("email" not in data or len(data["email"].strip()) == 0)
+        ):
+        raise IncorrectFieldsException("Incorrect field: username is missing or empty.")
 
     return data
