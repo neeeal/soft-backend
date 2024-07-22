@@ -81,8 +81,25 @@ def login():
 
 @users_bp.route('/update_user', methods = ['PUT'])
 def update_user():
-    usersController.update_user()
-    return None
+    DATA = request.get_json()    
+    
+    try:
+        correct_method = validation.is_PUT(request.method)
+        result = usersController.update_user(DATA)
+    
+    except validation.IncorrectDataException as e:
+        error_message = str(e.message)
+        return jsonify({'msg': error_message}), 400
+    
+    except Exception as e:
+        print("Unhandled exception")
+        print(str(e))
+        return jsonify({'msg': "Internal server error"}), 500
+    
+    return jsonify({
+            'msg': "Succesfully updated user.",
+            'data': result
+            }), 200
 
 @users_bp.route("/logout", methods=['POST'])
 def logout():
@@ -112,7 +129,7 @@ def logout():
     return jsonify({
             'msg': "Successfully logged out.",
             'data': result
-            }), 400
+            }), 200
 
 @users_bp.route("/get_user/<string:user_id>", methods=["GET"])
 def get_user(user_id):

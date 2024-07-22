@@ -145,8 +145,7 @@ def login(data):
 
     # Create blacklist token
     blacklist_doc = {
-        "username": exists["username"],
-        "email": exists["email"],
+        "user": ObjectId(exists["_id"]),
         "token": jwt_token,
         "created_at": datetime.now(),
         "updated_at": datetime.now(),
@@ -159,30 +158,52 @@ def login(data):
     
     return result.acknowledged
 
-def update_user():
-    return None
+def update_user(data):
+    field = data["field"].lower()
+    value = data["value"]
+    
+    if field == "email":
+        value = validation.email_format(value)
+    elif field == "username":
+        value = validation.username_format(value)
+    elif field == "contact":
+        value = validation.contact_format(value)
+    elif field == "password":
+        value = validation.secure_password(value)
+        
+    update_query = { 
+        "_id": ObjectId(data["user"]),
+        "deleted_at": None
+        }
+    
+    new_value = {
+        "$set": {
+            field: value,
+            "updated_at": datetime.now()
+        }
+    }
+    
+    result = usersCol.update_one(update_query, new_value)
+    
+    return result.acknowledged
 
 def logout(data):
     
     existing_token = is_not_login(data)
 
     update_query = { "token": existing_token["token"] }
-    newvalues = { "$set": { "deleted_at": datetime.now() } }
+    new_value = { "$set": { "deleted_at": datetime.now() } }
 
-    result = blacklistCol.update_one(update_query, newvalues)
+    result = blacklistCol.update_one(update_query, new_value)
     print(result)
     return result.acknowledged
 
 def is_not_login(data):
-    username = data["username"]
-    email = data["email"]
+    ## True if not logged in
     token = data["token"]
     # Check if login token exists
     query = {
-        "$or" : [
-            {"user": username},
-            {"email": email},
-        ],
+        "user": ObjectId(data["user"]),
         "token": token,
         "deleted_at": None
     }
@@ -191,20 +212,15 @@ def is_not_login(data):
     if not existing_token:
         raise validation.InvalidLoginTokenException("Invalid session. Please log in again.")
     
-    is_expired = jwt.decode(existing_token["token"], PRIVATE_KEY, algorithms=["HS256"])
+    is_expired = jwt.decode(token, PRIVATE_KEY, algorithms=["HS256"])
     
     return existing_token
 
 def is_login(data):
-    username = data["username"]
-    email = data["email"]
-    
+    ## false if not logged in
     # Check if login token exists
     query = {
-        "$or" : [
-            {"user": username},
-            {"email": email},
-        ],
+        "user": ObjectId(data["_id"]),
         "deleted_at": None
     }
     existing_token = blacklistCol.find_one(query)
