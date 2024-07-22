@@ -1,7 +1,6 @@
 from flask import Flask, render_template, redirect, request, jsonify, session, send_file, Blueprint
 import os
 import controllers.recommendation as recommendationController
-import helpers.recommendation as recommendation_helper
 import middlewares.validation as validation
 import dotenv
 from helpers.utils import is_login, is_not_login
