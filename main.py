@@ -2,6 +2,7 @@ from flask import Flask,jsonify,session,request
 from routes.history import history_bp
 from routes.recommendation import recommendation_bp
 from routes.users import users_bp
+from routes.blacklist import blacklist_bp
 import dotenv
 import os
 from flask_mail import Mail, Message
@@ -37,9 +38,10 @@ def index():
     return jsonify({'msg':'skanin API is now online'}), 200
 
 # Register blueprints
+app.register_blueprint(users_bp, url_prefix='/api/users')
 app.register_blueprint(history_bp, url_prefix='/api/history')
 app.register_blueprint(recommendation_bp, url_prefix='/api/recommendation')
-app.register_blueprint(users_bp, url_prefix='/api/users')
+app.register_blueprint(blacklist_bp, url_prefix='/api/blacklist')
 
 # @app.route('/api/otp')
 # def otp():

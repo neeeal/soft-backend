@@ -37,87 +37,78 @@ def signup():
     msg = ''
     DATA = request.get_json()
     # Check if form fields POST requests exist (user submitted form)
-    if (request.method == 'POST' and 'username' in DATA 
-        and 'password' in DATA and 'email' in DATA 
-        # and 'first_name' in DATA and 'last_name' in DATA
-        # and 'contact' in DATA
-        ):
-        if session.get("loggedin") == True:
-            return jsonify({'msg':"You are already logged in"}),400
-        # Create variables for easy access
-        username = DATA['username']
-        password = DATA['password']
-        email = DATA['email']
-        if 'first_name' in DATA:
-            if DATA['first_name'] != '': first_name = DATA['first_name']
-        else: first_name=None
-        if 'last_name' in DATA:
-            if DATA['last_name'] != '': last_name = DATA['last_name']
-        else: last_name=None
-        if 'contact' in DATA:
-            if DATA['contact'] != '': 
-                contact = DATA['contact']
-                ## Contact Checking
-                if len(contact) != 11: msg += "Contact must be 11 digits. "; flag = 1
-                if contact.isnumeric() == False: msg += "Contact must only contain numbers. "; flag = 1
-        else: contact=None
-        flag = 0 ## checker if error occured
-        
-        ## Password Requirements:
-        ## at least 8 length, one small letter, one big letter
-        ## one number, one special character
-        if len(password) < 8 : msg += "Password must be at least 8 characters. "; flag = 1
-        if re.search('[a-z]', password) is None:msg += "Password must contain at least 1 small character. ";flag = 1
-        if re.search('[A-Z]', password) is None:msg += "Password must contain at least 1 big character. ";flag = 1
-        if re.search('[0-9]', password) is None:msg += "Password must contain at least 1 number. ";flag = 1
-        if re.compile("[@_!#$%^&*()<>?/|}{~:]").search(password) is None: msg = "Password must contain at least one special character. ";flag = 1
+    # Create variables for easy access
+    username = DATA['username']
+    password = DATA['password']
+    email = DATA['email']
+    if 'first_name' in DATA:
+        if DATA['first_name'] != '': first_name = DATA['first_name']
+    else: first_name=None
+    if 'last_name' in DATA:
+        if DATA['last_name'] != '': last_name = DATA['last_name']
+    else: last_name=None
+    if 'contact' in DATA:
+        if DATA['contact'] != '': 
+            contact = DATA['contact']
+            ## Contact Checking
+            if len(contact) != 11: msg += "Contact must be 11 digits. "; flag = 1
+            if contact.isnumeric() == False: msg += "Contact must only contain numbers. "; flag = 1
+    else: contact=None
+    flag = 0 ## checker if error occured
+    
+    ## Password Requirements:
+    ## at least 8 length, one small letter, one big letter
+    ## one number, one special character
+    if len(password) < 8 : msg += "Password must be at least 8 characters. "; flag = 1
+    if re.search('[a-z]', password) is None:
+        msg += "Password must contain at least 1 small character. ";flag = 1
+    if re.search('[A-Z]', password) is None:
+        msg += "Password must contain at least 1 big character. ";flag = 1
+    if re.search('[0-9]', password) is None:
+        msg += "Password must contain at least 1 number. ";flag = 1
+    if re.compile("[@_!#$%^&*()<>?/|}{~:]").search(password) is None: msg = "Password must contain at least one special character. ";flag = 1
 
-        ## Username Checking
-        if len(username) < 3: msg += "Username must be at least 3 characters. "; flag = 1
+    ## Username Checking
+    if len(username) < 3: msg += "Username must be at least 3 characters. "; flag = 1
+    
+    ## Email Checking
+    if ("@" in email and "." in email.split("@")[1]) == False:
+        msg += "Email must be a valid email address. "; flag = 1
         
-        ## Email Checking
-        if ("@" in email and "." in email.split("@")[1]) == False:
-            msg += "Email must be a valid email address. "; flag = 1
-            
-        
-        ## Check if error occured
-        if flag == 1: 
-            return jsonify({"msg":msg}), 400
-        
-        
-        
-        # Retrieve the hashed password
-        hash = password + users_bp.secret_key
-        hash = hashlib.sha1(hash.encode())
-        password = hash.hexdigest()
-        # Check if account exists using MySQL
-        connection.ping(reconnect=True)
+    
+    ## Check if error occured
+    if flag == 1: 
+        return jsonify({"msg":msg}), 400
+    
+    # Retrieve the hashed password
+    hash = password + users_bp.secret_key
+    hash = hashlib.sha1(hash.encode())
+    password = hash.hexdigest()
+    # Check if account exists using MySQL
+    connection.ping(reconnect=True)
+    with connection.cursor() as cursor:
+        cursor = connection.cursor()
+        cursor.execute(f"SELECT * FROM users WHERE username = '{username}' OR email = '{email}'")
+        # Fetch one record return the result
+        account = cursor.fetchone()
+    if account == None:
+        # Account doesnt exist. New account verified
         with connection.cursor() as cursor:
             cursor = connection.cursor()
-            cursor.execute(f"SELECT * FROM users WHERE username = '{username}' OR email = '{email}'")
-            # Fetch one record return the result
-            account = cursor.fetchone()
-        if account == None:
-            # Account doesnt exist. New account verified
-            with connection.cursor() as cursor:
-                cursor = connection.cursor()
-                cursor.execute(f'''INSERT INTO `users`(`username`, `password`, `email`,`first_name`,`last_name`,`contact`) 
-                                VALUES ('{username}','{password}','{email}','{first_name}','{last_name}','{contact}')''')
-            connection.commit()
-            msg = 'Account created succesfully'
-            return jsonify({'msg':msg}), 200
-        elif account['email']==email:
-            # Message if email is taken
-            msg = 'Email already taken'
-        elif account['username']==username:
-            # Message if username is taken
-            msg = 'Username already taken'
-        elif account['contact']==contact:
-            # Message if contact is taken
-            msg = 'Contact number already taken'
-        else:
-            msg = 'Unknown error. Contact website administrator'
-    return jsonify({'msg':msg}), 500
+            cursor.execute(f'''INSERT INTO `users`(`username`, `password`, `email`,`first_name`,`last_name`,`contact`) 
+                            VALUES ('{username}','{password}','{email}','{first_name}','{last_name}','{contact}')''')
+        connection.commit()
+        msg = 'Account created succesfully'
+        return jsonify({'msg':msg}), 200
+    
+    elif account['email']==email:
+        raise Exception("Account already exists. Email already taken.")
+    
+    elif account['username']==username:
+        raise Exception("Account already exists. Username already taken.")
+    
+    elif account['contact']==contact:
+        raise Exception("Account already exists. Contact number already taken.")
 
 @users_bp.route('/login', methods=['POST'])
 def login():
