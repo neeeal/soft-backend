@@ -1,12 +1,14 @@
+from bson.objectid import ObjectId
+from datetime import datetime
+from helpers.utils import is_login, is_not_login
 import pymongo
 import os
 import hashlib
 import dotenv
-from datetime import datetime
 import middlewares.validation as validation
 import time
 import jwt
-from bson.objectid import ObjectId
+
 
 ## Loading Envieronment Variables
 dotenv.load_dotenv()
@@ -128,7 +130,8 @@ def login(data):
         "password": hashed_password,
         "deleted_at": None
     }
-    exists = usersCol.find_one(query)
+    exists = usersCol.find_one(query, {"password": 0})
+    exists["_id"] = str(exists["_id"])
     
     if not exists:
         raise validation.InvalidCredentialsException("Invalid user credentials.")
@@ -154,9 +157,11 @@ def login(data):
     
     # Insert blacklist document
     result = blacklistCol.insert_one(blacklist_doc)
-    print(result)
     
-    return result.acknowledged
+    finalData = exists
+    finalData["token"] = jwt_token
+    
+    return finalData
 
 def update_user(data):
     field = data["field"].lower()
@@ -172,7 +177,7 @@ def update_user(data):
         value = validation.secure_password(value)
         
     update_query = { 
-        "_id": ObjectId(data["user"]),
+        "_id": ObjectId(data["_id"]),
         "deleted_at": None
         }
     
@@ -198,46 +203,11 @@ def logout(data):
     print(result)
     return result.acknowledged
 
-def is_not_login(data):
-    ## True if not logged in
-    token = data["token"]
-    # Check if login token exists
-    query = {
-        "user": ObjectId(data["user"]),
-        "token": token,
-        "deleted_at": None
-    }
-    existing_token = blacklistCol.find_one(query)
-    
-    if not existing_token:
-        raise validation.InvalidLoginTokenException("Invalid session. Please log in again.")
-    
-    is_expired = jwt.decode(token, PRIVATE_KEY, algorithms=["HS256"])
-    
-    return existing_token
 
-def is_login(data):
-    ## false if not logged in
-    # Check if login token exists
-    query = {
-        "user": ObjectId(data["_id"]),
-        "deleted_at": None
-    }
-    existing_token = blacklistCol.find_one(query)
-    
-    if not existing_token:
-        return None
-    
-    try:
-        is_expired = jwt.decode(existing_token["token"], PRIVATE_KEY, algorithms=["HS256"])
-        raise validation.AlreadyLoggedInException("User is already logged in.")
-    except jwt.ExpiredSignatureError:
-        return None
-    
 def get_user(data):
     # Check if account exists
     query = {
-        "_id": ObjectId(data["id"]),
+        "_id": ObjectId(data["_id"]),
         "deleted_at": None
     }
     exists = usersCol.find_one(query,{ "_id": 0, "password": 0})

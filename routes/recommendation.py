@@ -1,8 +1,10 @@
 from flask import Flask, render_template, redirect, request, jsonify, session, send_file, Blueprint
 import os
 import controllers.recommendation as recommendationController
+import helpers.recommendation as recommendation_helper
 import middlewares.validation as validation
 import dotenv
+from helpers.utils import is_login, is_not_login
 
 ## Loading Envieronment Variables
 dotenv.load_dotenv()
@@ -14,4 +16,24 @@ recommendation_bp.secret_key = SECRET_KEY
 
 @recommendation_bp.route('/skan', methods=["POST"])
 def skan():
-    return None
+    DATA = request.get_json()    
+    token = request.headers["Authorization"].split(" ")[1]
+    DATA["token"] = token
+    
+    try:
+        is_not_login(DATA)
+        validation.image_data(DATA)
+        result = recommendationController.get_recommendation(DATA)
+    
+    except validation.InvalidLoginTokenException as e:
+        error_message = str(e.message)
+        return jsonify({'msg': error_message}), 400
+
+    except validation.IncorrectFieldsException as e:
+        error_message = str(e.message)
+        return jsonify({'msg': error_message}), 400
+    
+    return jsonify({
+        'msg': "Successfully scanned image",
+        "data": result
+        }), 200

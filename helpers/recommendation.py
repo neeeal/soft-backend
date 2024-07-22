@@ -8,19 +8,6 @@ import gdown
 import requests
 import base64
 from io import BytesIO
-import pymongo
-import dotenv
-import os
-from bson.objectid import ObjectId
-from datetime import datetime
-import calendar
-
-dotenv.load_dotenv()
-MONGODB_URL = os.getenv('MONGODB_URL')
-mongoClient = pymongo.MongoClient(MONGODB_URL)
-db = mongoClient["dev"]
-stressCol = db["stress"]
-historyCol = db["history"]
 
 image_size = (224)
 channels = 3
@@ -34,17 +21,30 @@ def load_m():
                     input_tensor=None,
                     input_shape=target_size+(3,),
                     pooling='avg',
+                    # classes=1000,
+                    # classifier_activation='softmax',
                 )
     # Create a new model on top of EfficientNetV2
     model = tf.keras.Sequential()
+    # model.add(tf.keras.layers.Input(target_size+(3,)))
     model.add(efficientnetv2)
     model.add(tf.keras.layers.Flatten())
     model.add(tf.keras.layers.BatchNormalization())
+    # model.add(tf.keras.layers.Dropout(0.3))
     model.add(tf.keras.layers.Dense(1024, activation = 'relu'))
     model.add(tf.keras.layers.Dropout(0.3))
     model.add(tf.keras.layers.Dense(1024, activation = 'relu'))
+    # model.add(tf.keras.layers.Dropout(0.5))
+    # model.add(tf.keras.layers.Dense(1024, activation = 'relu'))
+    # model.add(tf.keras.layers.Dropout(0.5))
+    # model.add(tf.keras.layers.Dense(1024, activation = 'relu'))
+    # model.add(tf.keras.layers.Dropout(0.5))
+    # model.add(tf.keras.layers.Dense(512, activation = 'relu'))
+    # model.add( tf.keras.layers.Dense(64, activation = 'softmax'))
+    # model.add( tf.keras.layers.Dense(32, activation = 'softmax'))
     model.add(tf.keras.layers.Dense(10, activation='softmax'))
     model.compile(optimizer=tf.keras.optimizers.RMSprop(1e-4), loss='categorical_crossentropy', metrics=['accuracy'])
+    # model.load_weights(filepath='model_weights/')
     url = 'https://drive.google.com/drive/folders/1ptqlr_T0XRs88FAoucKSf7pxcEixRZ9O'
     gdown.download_folder(url, quiet=True, use_cookies=False)
     model.load_weights(filepath='model_weights/')
@@ -58,10 +58,6 @@ def preprocessData(data, image_size = 384):
     img_array = image.img_to_array(img)
     img_array = np.expand_dims(img_array, axis=0)
     img_array *= 1./255
-
-    return img_array
-
-def get_recommendation(DATA):
     
     if len(DATA['image'].strip().split(',')) == 2:
         extension, file = DATA['image'].strip().split(',')
@@ -74,13 +70,16 @@ def get_recommendation(DATA):
         image_data = base64.b64decode(file)
     else:
         file = DATA['image'].strip()
+        # if extension in ['data:image/png;base64','data:image/jpeg;base64','data:image/jpg;base64'] : 
+        #     msg = "Invalid file type. Submit only .jpg, .png, or .jpeg files."
+            # return jsonify({"msg":msg}), 400
         padding = len(file) % 4
         if padding:
             file += '=' * (4 - padding)
         image_data = base64.b64decode(file)
     image_stream = BytesIO(image_data)
-    pil_image = Image.open(image_stream
-                            ).convert('RGB')
+    pil_image = Image.open(image_stream#.stream
+                            ).convert('RGB')#.resize((300, 300))
     width, height = pil_image.size
     if width > height:
         new_width = 224
@@ -94,42 +93,27 @@ def get_recommendation(DATA):
     save_image.save(image_stream, format='JPEG')
     image_data = image_stream.getvalue()
     data = np.array(pil_image)
+    # pil_image.save("old_api/test_pil.jpeg")
+    
 
     ## Image for saving
     rice_image = image_data
 
+    # with open("old_api/test_bin.bin", 'wb') as BIN:
+    #     BIN.write(rice_image)
+
     ## Model prediction
     global model
     if model == None:
-        model = load_m()
+        model = load_m()#load_model('model_text.h5')
+        # model.load_weights()
     data = preprocessData(data)
     result = np.argmax(model(data))+1
+    print(result)
+    # print("INSERT HERE")
+    # result = '3'
+        ## End of prediction
 
     ## Getting Recommendation using output from model
     stress_id = int(result)
-    
-    query = {
-        "stress_id": stress_id,
-        "deleted_at": None
-    }
-    
-    result = stressCol.find_one(query, {"_id": 0})
-    now = datetime.now()
-    history_doc = {
-        "user": ObjectId(DATA["_id"]),
-        "stress_id": stress_id,
-        "date_transaction": now, ## created_at
-        "updated_at":now,
-        "deleted_at": None,
-        "rice_image": rice_image,
-        "image_name": f"{DATA['_id'][-10:]}_{calendar.timegm(now.timetuple())}_{stress_id}",
-    }
-    
-    # Insert user document
-    result = historyCol.insert_one(history_doc)
-    
-    history_doc["user"] = str(history_doc["user"])
-    history_doc["_id"] = str(history_doc["_id"])
-    history_doc["rice_image"] = str(base64.b64encode(history_doc["rice_image"]).decode('utf-8'))
-    
-    return history_doc
+    return stress_id

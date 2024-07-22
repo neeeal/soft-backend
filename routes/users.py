@@ -135,13 +135,11 @@ def logout():
 def get_user(user_id):
     token = request.headers["Authorization"].split(" ")[1]
     
-    DATA = {"id": user_id, "token": token}
+    DATA = {"_id": user_id, "token": token}
     
     try:
         correct_method = validation.is_GET(request.method)
-        print("started")
         result = usersController.get_user(DATA)
-        print("ended")
     
     except validation.InvalidLoginTokenException as e:
         error_message = str(e.message)

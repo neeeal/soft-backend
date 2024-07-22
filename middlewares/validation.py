@@ -107,3 +107,9 @@ def login_data(data):
         raise IncorrectFieldsException("Incorrect field: username is missing or empty.")
 
     return data
+
+def image_data(data):
+    if "image" not in data:
+        raise IncorrectFieldsException("Missing Image Data")
+    
+    return data
