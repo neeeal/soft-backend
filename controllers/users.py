@@ -6,6 +6,7 @@ from datetime import datetime
 import middlewares.validation as validation
 import time
 import jwt
+from bson.objectid import ObjectId
 
 ## Loading Envieronment Variables
 dotenv.load_dotenv()
@@ -132,7 +133,7 @@ def login(data):
     if not exists:
         raise validation.InvalidCredentialsException("Invalid user credentials.")
     
-    has_token(exists)
+    is_login(exists)
     
     current_time = int(time.time())
     expiration_time = current_time + 36000 # ten hours
@@ -163,7 +164,7 @@ def update_user():
 
 def logout(data):
     
-    existing_token = not_has_token(data)
+    existing_token = is_not_login(data)
 
     update_query = { "token": existing_token["token"] }
     newvalues = { "$set": { "deleted_at": datetime.now() } }
@@ -172,10 +173,7 @@ def logout(data):
     print(result)
     return result.acknowledged
 
-def get_user():
-    return None
-
-def not_has_token(data):
+def is_not_login(data):
     username = data["username"]
     email = data["email"]
     token = data["token"]
@@ -197,7 +195,7 @@ def not_has_token(data):
     
     return existing_token
 
-def has_token(data):
+def is_login(data):
     username = data["username"]
     email = data["email"]
     
@@ -220,3 +218,17 @@ def has_token(data):
     except jwt.ExpiredSignatureError:
         return None
     
+def get_user(data):
+    # Check if account exists
+    query = {
+        "_id": ObjectId(data["id"]),
+        "deleted_at": None
+    }
+    exists = usersCol.find_one(query,{ "_id": 0, "password": 0})
+    
+    data["username"] = exists["username"]
+    data["email"] = exists["email"]
+
+    is_not_login(data)
+    
+    return exists

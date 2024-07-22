@@ -56,6 +56,10 @@ def login():
         correct_method = validation.is_POST(request.method)
         complete_data = validation.login_data(DATA)
         result = usersController.login(complete_data)
+        
+    except validation.IncorrectMethodException as e:
+        error_message = str(e.message)
+        return jsonify({'msg': error_message}), 400
     
     except validation.InvalidCredentialsException as e:
         error_message = str(e.message)
@@ -75,7 +79,7 @@ def login():
         'data': result
         }), 200
 
-@users_bp.route('/update_user', methods = ['GET', 'PUT'])
+@users_bp.route('/update_user', methods = ['PUT'])
 def update_user():
     usersController.update_user()
     return None
@@ -88,6 +92,10 @@ def logout():
         correct_method = validation.is_POST(request.method)
         result = usersController.logout(DATA)
 
+    except validation.IncorrectMethodException as e:
+        error_message = str(e.message)
+        return jsonify({'msg': error_message}), 400
+    
     except validation.InvalidLoginTokenException as e:
         error_message = str(e.message)
         return jsonify({'msg': error_message}), 400
@@ -106,12 +114,33 @@ def logout():
             'data': result
             }), 400
 
-@users_bp.route("/get_user", methods=["GET"])
-def get_user():
-    usersController.get_user()
-    return None
+@users_bp.route("/get_user/<string:user_id>", methods=["GET"])
+def get_user(user_id):
+    token = request.headers["Authorization"].split(" ")[1]
+    
+    DATA = {"id": user_id, "token": token}
+    
+    try:
+        correct_method = validation.is_GET(request.method)
+        print("started")
+        result = usersController.get_user(DATA)
+        print("ended")
+    
+    except validation.InvalidLoginTokenException as e:
+        error_message = str(e.message)
+        return jsonify({'msg': error_message}), 400
 
-@users_bp.route('/token', methods=["POST"])
-def create_token():
-    usersController.create_token()
-    return None
+    except validation.IncorrectMethodException as e:
+        error_message = str(e.message)
+        return jsonify({'msg': error_message}), 400
+    
+    except Exception as e:
+        print("Unhandled exception")
+        print(str(e))
+        return jsonify({'msg': "Internal server error"}), 500
+    
+    return jsonify({
+        'msg': "Successfully retrieved data.",
+        'data': result
+        }), 200
+    
