@@ -4,6 +4,7 @@ import controllers.users as usersController
 import controllers.blacklist as blacklistController
 import middlewares.validation as validation
 import dotenv
+import jwt 
 
 ## Connect to Flask
 users_bp = Blueprint('users',__name__)
@@ -45,7 +46,7 @@ def signup():
     return jsonify({
         'msg': "Successfully registered user.",
         'data': result
-        }), 400
+        }), 200
 
 @users_bp.route('/login', methods=['POST'])
 def login():
@@ -60,6 +61,10 @@ def login():
         error_message = str(e.message)
         return jsonify({'msg': error_message}), 400
     
+    except validation.AlreadyLoggedInException as e:
+        error_message = str(e.message)
+        return jsonify({'msg': error_message}), 400
+    
     except Exception as e:
         print("Unhandled exception")
         print(str(e))
@@ -68,7 +73,7 @@ def login():
     return jsonify({
         'msg': "Successfully logged in.",
         'data': result
-        }), 400
+        }), 200
 
 @users_bp.route('/update_user', methods = ['GET', 'PUT'])
 def update_user():
@@ -77,8 +82,29 @@ def update_user():
 
 @users_bp.route("/logout", methods=['POST'])
 def logout():
-    usersController.logout()
-    return None
+    DATA = request.get_json()    
+
+    try: 
+        correct_method = validation.is_POST(request.method)
+        result = usersController.logout(DATA)
+
+    except validation.InvalidLoginTokenException as e:
+        error_message = str(e.message)
+        return jsonify({'msg': error_message}), 400
+
+    except jwt.ExpiredSignatureError:
+        error_message = str("Session expired. Please login again.")
+        return jsonify({'msg': error_message}), 400
+
+    except Exception as e:
+        print("Unhandled exception")
+        print(str(e))
+        return jsonify({'msg': "Internal server error"}), 500
+
+    return jsonify({
+            'msg': "Successfully logged out.",
+            'data': result
+            }), 400
 
 @users_bp.route("/get_user", methods=["GET"])
 def get_user():

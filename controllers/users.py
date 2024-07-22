@@ -10,6 +10,8 @@ import jwt
 ## Loading Envieronment Variables
 dotenv.load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
+PRIVATE_KEY = os.getenv("PRIVATE_KEY")
+PUBLIC_KEY = os.getenv("PUBLIC_KEY")
 MONGODB_URL = os.getenv('MONGODB_URL')
 
 ## Load MongoDB Client
@@ -130,19 +132,20 @@ def login(data):
     if not exists:
         raise validation.InvalidCredentialsException("Invalid user credentials.")
     
+    has_token(exists)
+    
     current_time = int(time.time())
     expiration_time = current_time + 36000 # ten hours
-    private_key = 'private_key'
-    public_key = 'public_key'
     claims = {
-        'sub': public_key,
+        'sub': PUBLIC_KEY,
         'exp': expiration_time,
     }
-    jwt_token = jwt.encode(claims, private_key, algorithm='HS256')
+    jwt_token = jwt.encode(claims, PRIVATE_KEY, algorithm='HS256')
 
     # Create blacklist token
     blacklist_doc = {
-        "user": user,
+        "username": exists["username"],
+        "email": exists["email"],
         "token": jwt_token,
         "created_at": datetime.now(),
         "updated_at": datetime.now(),
@@ -158,11 +161,62 @@ def login(data):
 def update_user():
     return None
 
-def logout():
-    return None
+def logout(data):
+    
+    existing_token = not_has_token(data)
+
+    update_query = { "token": existing_token["token"] }
+    newvalues = { "$set": { "deleted_at": datetime.now() } }
+
+    result = blacklistCol.update_one(update_query, newvalues)
+    print(result)
+    return result.acknowledged
 
 def get_user():
     return None
 
-def validate_session():
-    return None
+def not_has_token(data):
+    username = data["username"]
+    email = data["email"]
+    token = data["token"]
+    # Check if login token exists
+    query = {
+        "$or" : [
+            {"user": username},
+            {"email": email},
+        ],
+        "token": token,
+        "deleted_at": None
+    }
+    existing_token = blacklistCol.find_one(query)
+    
+    if not existing_token:
+        raise validation.InvalidLoginTokenException("Invalid session. Please log in again.")
+    
+    is_expired = jwt.decode(existing_token["token"], PRIVATE_KEY, algorithms=["HS256"])
+    
+    return existing_token
+
+def has_token(data):
+    username = data["username"]
+    email = data["email"]
+    
+    # Check if login token exists
+    query = {
+        "$or" : [
+            {"user": username},
+            {"email": email},
+        ],
+        "deleted_at": None
+    }
+    existing_token = blacklistCol.find_one(query)
+    
+    if not existing_token:
+        return None
+    
+    try:
+        is_expired = jwt.decode(existing_token["token"], PRIVATE_KEY, algorithms=["HS256"])
+        raise validation.AlreadyLoggedInException("User is already logged in.")
+    except jwt.ExpiredSignatureError:
+        return None
+    

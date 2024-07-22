@@ -23,6 +23,12 @@ class AccountExistsException(CustomException):
 class InvalidCredentialsException(CustomException):
     pass
 
+class InvalidLoginTokenException(CustomException):
+    pass
+
+class AlreadyLoggedInException(CustomException):
+    pass
+
 def secure_password(password):
     # Password Requirements:
     # at least 8 characters, one lowercase letter, one uppercase letter,
