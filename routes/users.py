@@ -20,22 +20,27 @@ def signup():
                 
     except validation.IncorrectMethodException as e:
         error_message = str(e.message)
+        print(error_message)
         return jsonify({'msg': error_message}), 400
     
     except validation.IncorrectFieldsException as e:
         error_message = str(e.message)
+        print(error_message)
         return jsonify({'msg': error_message}), 400
     
     except validation.IncorrectFormatException as e:
         error_message = str(e.message)
+        print(error_message)
         return jsonify({'msg': error_message}), 400
     
     except validation.IncorrectDataException as e:
         error_message = str(e.message)
+        print(error_message)
         return jsonify({'msg': error_message}), 400
     
     except validation.AccountExistsException as e:
         error_message = str(e.message)
+        print(error_message)
         return jsonify({'msg': error_message}), 400
     
     except Exception as e:
@@ -50,6 +55,7 @@ def signup():
 
 @users_bp.route('/login', methods=['POST'])
 def login():
+    print("here",request.get_data())
     DATA = request.get_json()    
     
     try: 
@@ -57,17 +63,26 @@ def login():
         complete_data = validation.login_data(DATA)
         result = usersController.login(complete_data)
         
+    except validation.IncorrectFieldsException as e:
+        error_message = str(e.message)
+        print(error_message)
+        return jsonify({'msg': error_message}), 400
+        
     except validation.IncorrectMethodException as e:
         error_message = str(e.message)
+        print(error_message)
         return jsonify({'msg': error_message}), 400
     
     except validation.InvalidCredentialsException as e:
         error_message = str(e.message)
+        print(error_message)
         return jsonify({'msg': error_message}), 400
     
-    except validation.AlreadyLoggedInException as e:
-        error_message = str(e.message)
-        return jsonify({'msg': error_message}), 400
+    # except validation.AlreadyLoggedInException as e:
+    #     error_message = str(e.message)
+    #     error_token = str(e.token)
+    #     print(error_message)
+    #     return jsonify({'msg': error_message, "token": error_token}), 200
     
     except Exception as e:
         print("Unhandled exception")
@@ -89,6 +104,7 @@ def update_user():
     
     except validation.IncorrectDataException as e:
         error_message = str(e.message)
+        print(error_message)
         return jsonify({'msg': error_message}), 400
     
     except Exception as e:
@@ -111,14 +127,17 @@ def logout():
 
     except validation.IncorrectMethodException as e:
         error_message = str(e.message)
+        print(error_message)
         return jsonify({'msg': error_message}), 400
     
     except validation.InvalidLoginTokenException as e:
         error_message = str(e.message)
+        print(error_message)
         return jsonify({'msg': error_message}), 400
 
     except jwt.ExpiredSignatureError:
         error_message = str("Session expired. Please login again.")
+        print(error_message)
         return jsonify({'msg': error_message}), 401
 
     except Exception as e:
@@ -143,11 +162,18 @@ def get_user(user_id):
     
     except validation.InvalidLoginTokenException as e:
         error_message = str(e.message)
+        print(error_message)
         return jsonify({'msg': error_message}), 401
 
     except validation.IncorrectMethodException as e:
         error_message = str(e.message)
+        print(error_message)
         return jsonify({'msg': error_message}), 400
+    
+    except jwt.ExpiredSignatureError:
+        error_message = str("Session expired. Please login again.")
+        print(error_message)
+        return jsonify({'msg': error_message}), 401
     
     except Exception as e:
         print("Unhandled exception")

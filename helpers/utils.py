@@ -32,27 +32,32 @@ def is_not_login(data):
     existing_token = blacklistCol.find_one(query)
     
     if not existing_token:
-        raise validation.InvalidLoginTokenException("Invalid session. Please log in again.")
+        raise validation.InvalidLoginTokenException("Client Error. Invalid session. Please log in again.")
     
     is_expired = jwt.decode(token, PRIVATE_KEY, algorithms=["HS256"])
     
     return existing_token
 
-def is_login(data):
-    ## false if not logged in
-    # Check if login token exists
-    query = {
-        "user": ObjectId(data["_id"]),
-        "deleted_at": None
-    }
-    existing_token = blacklistCol.find_one(query)
+# def is_login(data):
+#     ## false if not logged in
+#     # Check if login token exists
+#     query = {
+#         "user": ObjectId(data["_id"]),
+#         "deleted_at": None
+#     }
+#     existing_token = list(blacklistCol.find(query).sort("created_at", -1).limit(1))
+#     if not len(existing_token):
+#         return None
     
-    if not existing_token:
-        return None
+#     existing_token = existing_token[0]
     
-    try:
-        is_expired = jwt.decode(existing_token["token"], PRIVATE_KEY, algorithms=["HS256"])
-        raise validation.AlreadyLoggedInException("User is already logged in.")
-    except jwt.ExpiredSignatureError:
-        return None
+#     try:
+#         is_expired = jwt.decode(existing_token["token"], PRIVATE_KEY, algorithms=["HS256"])
+#         raise validation.AlreadyLoggedInException({
+#             "token": existing_token["token"],
+#             "message": "Client Error. User is already logged in."
+#             })
+#     except jwt.ExpiredSignatureError:
+#         print("jwt.ExpiredSignatureError")
+#         return None
     

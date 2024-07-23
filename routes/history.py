@@ -25,15 +25,18 @@ def get_history_with_images():
 
     except validation.IncorrectMethodException as e:
         error_message = str(e.message)
+        print(error_message)
         return jsonify({'msg': error_message}), 400
 
     except jwt.ExpiredSignatureError:
         error_message = str("Session expired. Please login again.")
+        print(error_message)
         return jsonify({'msg': error_message}), 401
     
     except Exception as e:
         print("Unhandled exception")
         print(str(e))
+        print(error_message)
         return jsonify({'msg': "Internal server error"}), 500
         
     return jsonify({

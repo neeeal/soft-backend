@@ -3,7 +3,7 @@ import os
 import controllers.recommendation as recommendationController
 import middlewares.validation as validation
 import dotenv
-from helpers.utils import is_login, is_not_login
+from helpers.utils import is_not_login
 
 ## Loading Envieronment Variables
 dotenv.load_dotenv()
@@ -26,10 +26,12 @@ def skan():
     
     except validation.InvalidLoginTokenException as e:
         error_message = str(e.message)
+        print(error_message)
         return jsonify({'msg': error_message}), 400
 
     except validation.IncorrectFieldsException as e:
         error_message = str(e.message)
+        print(error_message)
         return jsonify({'msg': error_message}), 400
     
     return jsonify({

@@ -3,7 +3,7 @@ import os
 import dotenv
 import base64
 import jwt
-from helpers.utils import is_login, is_not_login
+from helpers.utils import is_not_login
 from bson.objectid import ObjectId
 
 ## Loading Envieronment Variables

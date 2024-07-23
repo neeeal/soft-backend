@@ -1,6 +1,6 @@
 from bson.objectid import ObjectId
 from datetime import datetime
-from helpers.utils import is_login, is_not_login
+from helpers.utils import is_not_login
 import pymongo
 import os
 import hashlib
@@ -100,19 +100,19 @@ def signup(data):
         return result.acknowledged
     
     elif exists['email']==email:
-        raise validation.AccountExistsException("Account already exists. Email already taken.")
+        raise validation.AccountExistsException("Client Error. Account already exists. Email already taken.")
     
     elif exists['username']==username:
-        raise validation.AccountExistsException("Account already exists. Username already taken.")
+        raise validation.AccountExistsException("Client Error. Account already exists. Username already taken.")
     
     elif exists['contact']==contact:
-        raise validation.AccountExistsException("Account already exists. Contact number already taken.")
+        raise validation.AccountExistsException("Client Error. Account already exists. Contact number already taken.")
 
-    raise Exception("Did not create account.")
+    raise Exception("Internal Server Error. Did not create account.")
 
 def login(data):
-    if data['username']:
-        user = data['username']
+    if data['user']:
+        user = data['user']
     elif data['email']:
         user = data['email']
     password = data["password"] 
@@ -131,12 +131,34 @@ def login(data):
         "deleted_at": None
     }
     exists = usersCol.find_one(query, {"password": 0})
-    exists["_id"] = str(exists["_id"])
     
     if not exists:
-        raise validation.InvalidCredentialsException("Invalid user credentials.")
+        raise validation.InvalidCredentialsException("Client Error. Invalid user credentials.")
     
-    is_login(exists)
+    exists["_id"] = str(exists["_id"])
+    
+
+    ## false if not logged in
+    # Check if login token exists
+    query = {
+        "user": ObjectId(exists["_id"]),
+        "deleted_at": None
+    }
+    existing_token = list(blacklistCol.find(query).sort("created_at", -1).limit(1))
+    if len(existing_token):    
+        existing_token = existing_token[0]
+        
+        try:
+            is_expired = jwt.decode(existing_token["token"], PRIVATE_KEY, algorithms=["HS256"])
+            # exists["msg"] = "User is already logged in."
+            exists["token"] = existing_token["token"]
+            return exists
+            # raise validation.AlreadyLoggedInException({
+            #     "token": existing_token["token"],
+            #     "message": "Client Error. User is already logged in."
+            #     })
+        except jwt.ExpiredSignatureError:
+            print("jwt.ExpiredSignatureError")
     
     current_time = int(time.time())
     expiration_time = current_time + 36000 # ten hours
