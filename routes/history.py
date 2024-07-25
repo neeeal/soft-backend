@@ -36,7 +36,6 @@ def get_history_with_images():
     except Exception as e:
         print("Unhandled exception")
         print(str(e))
-        print(error_message)
         return jsonify({'msg': "Internal server error"}), 500
         
     return jsonify({
@@ -46,4 +45,38 @@ def get_history_with_images():
     
 @history_bp.route("/get_history_entry/<int:history_id>", methods=["GET"])
 def get_history_entry(history_id):
+    return None
+
+@history_bp.route("/get_latest_home_data", methods=["GET"])
+def get_latest_home_data():
+    user_id = request.headers.get('User-Id')  # Get user ID from headers
+    data = {
+        "user_id": user_id,
+        "token": request.headers.get('Authorization').split(" ")[1]  # Get token from headers
+    }
+    try:
+        result = historyController.get_latest_home_data(data)
+
+    except validation.IncorrectMethodException as e:
+        error_message = str(e.message)
+        print(error_message)
+        return jsonify({'msg': error_message}), 400
+
+    except jwt.ExpiredSignatureError:
+        error_message = str("Session expired. Please login again.")
+        print(error_message)
+        return jsonify({'msg': error_message}), 401
+    
+    except Exception as e:
+        print("Unhandled exception")
+        print(str(e))
+        return jsonify({'msg': "Internal server error"}), 500
+        
+    return jsonify({
+        'msg': "Successfully retrieved history user.",
+        'data': result
+        }), 200
+
+@history_bp.route("/get_stress", methods=["GET"])
+def get_stress():
     return None

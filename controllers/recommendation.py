@@ -79,7 +79,7 @@ def get_recommendation(DATA):
         "deleted_at": None
     }
     
-    result = stressCol.find_one(query, {"_id": 0})
+    stress_doc = stressCol.find_one(query, {"_id": 0, "stress_id": 0, "rice_image": 0})
     now = datetime.now()
     history_doc = {
         "user": ObjectId(DATA["_id"]),
@@ -97,5 +97,7 @@ def get_recommendation(DATA):
     history_doc["user"] = str(history_doc["user"])
     history_doc["_id"] = str(history_doc["_id"])
     history_doc["rice_image"] = str(base64.b64encode(history_doc["rice_image"]).decode('utf-8'))
+    history_doc["recommendation"] = history_doc["recommendation"].replace("\\n", "\n")
+    history_doc["description"] = history_doc["description"].replace("\\n", "\n")
     
-    return history_doc
+    return history_doc | stress_doc
