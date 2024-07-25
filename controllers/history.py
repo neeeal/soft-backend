@@ -55,19 +55,27 @@ def get_latest_home_data(data):
     histories = []
     stresses = []
     
-    for history in history_cursor:
-        history["_id"] = str(history["_id"])
-        history["user"] = str(history["user"])
-        history["rice_image"] = str(base64.b64encode(history["rice_image"]).decode('utf-8'))
-        print(history["date_transaction"])
-        histories.append(history)
-    
     for stress in stress_cursor:
         stress["_id"] = str(stress["_id"])
         stress["rice_image"] = str(base64.b64encode(stress["rice_image"]).decode('utf-8'))
         stress["recommendation"] = stress["recommendation"].replace("\\n", "\n\n")
         stress["description"] = stress["description"].replace("\\n", "\n\n")
         stresses.append(stress)
+        
+    for history in history_cursor:
+        history["_id"] = str(history["_id"])
+        history["user"] = str(history["user"])
+        history["rice_image"] = str(base64.b64encode(history["rice_image"]).decode('utf-8'))
+        stress = stresses[history["stress_id"]-1]
+        
+        history["stress_type"] = stress["stress_type"]
+        history["stress_name"] = stress["stress_name"]
+        history["stress_level"] = stress["stress_level"]
+        history["description"] = stress["description"].replace("\\n", "\n\n")
+        history["recommendation"] = stress["recommendation"].replace("\\n", "\n\n")
+        history["recommendation_src"] = stress["recommendation_src"]
+        history["description_src"] = stress["description_src"]
+        histories.append(history)
     
     data = {
         "history": histories,
@@ -116,10 +124,10 @@ def get_stress(data):
         result["stress_type"] = stress["stress_type"]
         result["stress_name"] = stress["stress_name"]
         result["stress_level"] = stress["stress_level"]
-        result["description"] = stress["description"]
-        result["recommendation"] = stress["recommendation"]
-        result["recommendation_src"] = stress["recommendation_src"].replace("\\n", "\n\n")
-        result["description_src"] = stress["description_src"].replace("\\n", "\n\n")
+        result["description"] = stress["description"].replace("\\n", "\n\n")
+        result["recommendation"] = stress["recommendation"].replace("\\n", "\n\n")
+        result["recommendation_src"] = stress["recommendation_src"]
+        result["description_src"] = stress["description_src"]
         results.append(result)
         
     return results
@@ -136,7 +144,7 @@ def get_history_with_images(data):
         "user": ObjectId(data["user_id"]),
         "deleted_at": None
     }
-    cursor = historyCol.find(history_query)
+    history_cursor = historyCol.find(history_query).sort("date_transaction", -1)
     
     stress_query = {
         "deleted_at": None
@@ -154,7 +162,7 @@ def get_history_with_images(data):
     stresses = [x for x in stress_cursor]
     
     results = []
-    for result in cursor:
+    for result in history_cursor:
         result["user"] = str(result["user"])
         result["_id"] = str(result["_id"])
         result["rice_image"] = str(base64.b64encode(result["rice_image"]).decode('utf-8'))
@@ -164,11 +172,11 @@ def get_history_with_images(data):
         result["stress_type"] = stress["stress_type"]
         result["stress_name"] = stress["stress_name"]
         result["stress_level"] = stress["stress_level"]
-        result["description"] = stress["description"]
-        result["recommendation"] = stress["recommendation"]
-        result["recommendation_src"] = stress["recommendation_src"].replace("\\n", "\n\n")
-        result["description_src"] = stress["description_src"].replace("\\n", "\n\n")
+        result["description"] = stress["description"].replace("\\n", "\n\n")
+        result["recommendation"] = stress["recommendation"].replace("\\n", "\n\n")
+        result["recommendation_src"] = stress["recommendation_src"]
+        result["description_src"] = stress["description_src"]
 
         results.append(result)
         
-    return results
+    return {"history": results}
