@@ -118,8 +118,8 @@ def get_stress(data):
         result["stress_level"] = stress["stress_level"]
         result["description"] = stress["description"]
         result["recommendation"] = stress["recommendation"]
-        result["recommendation_src"] = stress["recommendation_src"]
-        result["description_src"] = stress["description_src"]
+        result["recommendation_src"] = stress["recommendation_src"].replace("\\n", "\n\n")
+        result["description_src"] = stress["description_src"].replace("\\n", "\n\n")
         results.append(result)
         
     return results
@@ -166,8 +166,9 @@ def get_history_with_images(data):
         result["stress_level"] = stress["stress_level"]
         result["description"] = stress["description"]
         result["recommendation"] = stress["recommendation"]
-        result["recommendation_src"] = stress["recommendation_src"]
-        result["description_src"] = stress["description_src"]
+        result["recommendation_src"] = stress["recommendation_src"].replace("\\n", "\n\n")
+        result["description_src"] = stress["description_src"].replace("\\n", "\n\n")
+
         results.append(result)
         
     return results
