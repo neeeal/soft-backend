@@ -38,3 +38,27 @@ def skan():
         'msg': "Successfully scanned image",
         "data": result
         }), 200
+    
+@recommendation_bp.route('/get_types', methods=["GET"])
+def get_types():
+    # DATA = request.get_json()    
+    token = request.headers["Authorization"].split(" ")[1]
+    user_id = request.headers.get('User-Id')  # Get user ID from headers
+    DATA = {
+        "token": token,
+        "_id": user_id
+    }
+    
+    try:
+        is_not_login(DATA)
+        result = recommendationController.get_types()
+    
+    except validation.InvalidLoginTokenException as e:
+        error_message = str(e.message)
+        print(error_message)
+        return jsonify({'msg': error_message}), 400
+    
+    return jsonify({
+        'msg': "Successfully retrieved types",
+        "data": result
+        }), 200

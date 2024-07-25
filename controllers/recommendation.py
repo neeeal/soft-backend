@@ -26,6 +26,25 @@ historyCol = db["history"]
 image_size = (224)
 channels = 3
 model=None
+
+def get_types():
+    query = {
+        "deleted_at": None
+    }
+    
+    stress_docs = stressCol.find(query)
+    
+    results = []
+    for stress_doc in stress_docs:
+        stress_doc["_id"] = str(stress_doc["_id"])
+        stress_doc["recommendation"] = stress_doc["recommendation"].replace("\\n", "\n\n")
+        stress_doc["description"] = stress_doc["description"].replace("\\n", "\n\n")
+        stress_doc["rice_image"] = str(base64.b64encode(stress_doc["rice_image"]).decode('utf-8'))
+        results.append(stress_doc)
+        
+    return {"types":results}
+
+
 # Define the function to handle the KerasLayer when loading the model
 def get_recommendation(DATA):
     
