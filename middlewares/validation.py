@@ -50,7 +50,8 @@ def secure_password(password):
     return password
 
 def email_format(email):
-    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+    if not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
+        print(email)
         raise IncorrectDataException("Client Error. Email must be a valid email address.")
     return email
 
@@ -109,7 +110,7 @@ def login_data(data):
     return data
 
 def image_data(data):
-    if "image" not in data:
+    if "image" not in data and "value" not in data:
         raise IncorrectFieldsException("Client Error. Missing Image Data")
     
     return data

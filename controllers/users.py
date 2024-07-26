@@ -8,7 +8,11 @@ import dotenv
 import middlewares.validation as validation
 import time
 import jwt
-
+import base64
+import numpy as np
+import cv2
+from PIL import Image
+from io import BytesIO
 
 ## Loading Envieronment Variables
 dotenv.load_dotenv()
@@ -197,11 +201,58 @@ def update_user(data):
         value = validation.contact_format(value)
     elif field == "password":
         value = validation.secure_password(value)
+        hash = value + SECRET_KEY
+        hash = hashlib.sha1(hash.encode())
+        value = hash.hexdigest()
+    elif field == "image":
+        # Split the value to check for file type and base64 data
+        parts = value.strip().split(',')
         
+        if len(parts) == 2:
+            extension, file = parts
+            if extension not in ['data:image/png;base64', 'data:image/jpeg;base64', 'data:image/jpg;base64']:
+                return "Invalid file type. Submit only .jpg, .png, or .jpeg files."
+        else:
+            file = value.strip()
+        
+        # Handle base64 padding
+        padding = len(file) % 4
+        if padding:
+            file += '=' * (4 - padding)
+        
+        try:
+            image_data = base64.b64decode(file)
+        except (base64.binascii.Error, ValueError) as e:
+            return "Invalid image data. Could not decode base64."
+        
+        # Load the image, convert, and resize
+        try:
+            image_stream = BytesIO(image_data)
+            pil_image = Image.open(image_stream).convert('RGB')
+        except (IOError, ValueError) as e:
+            return "Invalid image file."
+        
+        # Calculate new size maintaining the aspect ratio
+        width, height = pil_image.size
+        if width > height:
+            new_width = 224
+            new_height = int((height / width) * 224)
+        else:
+            new_height = 224
+            new_width = int((width / height) * 224)
+        
+        save_image = pil_image.resize((new_width, new_height))
+        image_stream = BytesIO()
+        save_image.save(image_stream, format='JPEG')
+        image_data = image_stream.getvalue()
+
+        # Prepare image data for saving
+        value = image_data
+    
     update_query = { 
         "_id": ObjectId(data["_id"]),
         "deleted_at": None
-        }
+    }
     
     new_value = {
         "$set": {
@@ -238,5 +289,7 @@ def get_user(data):
     data["email"] = exists["email"]
 
     is_not_login(data)
+    
+    exists["image"] = str(base64.b64encode(exists["image"]).decode('utf-8'))
     
     return exists

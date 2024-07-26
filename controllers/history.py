@@ -50,7 +50,7 @@ def get_latest_home_data(data):
         "recommendation_src": 1,
         "description_src": 1,
         "rice_image": 1
-    }).limit(3)
+    })
     
     histories = []
     stresses = []
@@ -62,10 +62,13 @@ def get_latest_home_data(data):
         stress["description"] = stress["description"].replace("\\n", "\n\n")
         stresses.append(stress)
         
+    print("sucesss types retrieval")
     for history in history_cursor:
         history["_id"] = str(history["_id"])
         history["user"] = str(history["user"])
         history["rice_image"] = str(base64.b64encode(history["rice_image"]).decode('utf-8'))
+        
+        print(history["stress_id"]-1)
         stress = stresses[history["stress_id"]-1]
         
         history["stress_type"] = stress["stress_type"]
@@ -76,10 +79,11 @@ def get_latest_home_data(data):
         history["recommendation_src"] = stress["recommendation_src"]
         history["description_src"] = stress["description_src"]
         histories.append(history)
+    print("sucesss history retrieval")
     
     data = {
         "history": histories,
-        "types": stresses
+        "types": stresses[:3]
     }
     return data
 
@@ -112,6 +116,7 @@ def get_stress(data):
     })
     
     stresses = [x for x in stress_cursor]
+    print("sucesss types retrieval")
     
     results = []
     for result in cursor:
@@ -119,6 +124,7 @@ def get_stress(data):
         result["_id"] = str(result["_id"])
         result["rice_image"] = str(base64.b64encode(result["rice_image"]).decode('utf-8'))
         
+        print(result["stress_id"]-1)
         stress = stresses[result["stress_id"]-1]
         
         result["stress_type"] = stress["stress_type"]
@@ -129,6 +135,7 @@ def get_stress(data):
         result["recommendation_src"] = stress["recommendation_src"]
         result["description_src"] = stress["description_src"]
         results.append(result)
+    print("sucesss history retrieval")
         
     return results
 
@@ -160,6 +167,7 @@ def get_history_with_images(data):
     })
     
     stresses = [x for x in stress_cursor]
+    print("sucesss types retrieval")
     
     results = []
     for result in history_cursor:
@@ -178,5 +186,6 @@ def get_history_with_images(data):
         result["description_src"] = stress["description_src"]
 
         results.append(result)
+    print("sucesss history retrieval")
         
     return {"history": results}

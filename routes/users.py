@@ -5,6 +5,7 @@ import controllers.blacklist as blacklistController
 import middlewares.validation as validation
 import dotenv
 import jwt 
+from helpers.utils import is_not_login
 
 ## Connect to Flask
 users_bp = Blueprint('users',__name__)
@@ -100,6 +101,10 @@ def update_user():
     
     try:
         correct_method = validation.is_PUT(request.method)
+        token = request.headers["Authorization"].split(" ")[1]
+        validation_data = {'token': token, "_id": DATA["_id"]}
+        is_not_login(validation_data)
+        
         result = usersController.update_user(DATA)
     
     except validation.IncorrectDataException as e:
@@ -107,10 +112,20 @@ def update_user():
         print(error_message)
         return jsonify({'msg': error_message}), 400
     
+    except validation.InvalidLoginTokenException as e:
+        error_message = str(e.message)
+        print(error_message)
+        return jsonify({'msg': error_message}), 401
+    
     except Exception as e:
         print("Unhandled exception")
         print(str(e))
         return jsonify({'msg': "Internal server error"}), 500
+    
+    except jwt.ExpiredSignatureError:
+        error_message = str("Session expired. Please login again.")
+        print(error_message)
+        return jsonify({'msg': error_message}), 401
     
     return jsonify({
             'msg': "Succesfully updated user.",
