@@ -34,6 +34,11 @@ def skan():
         print(error_message)
         return jsonify({'msg': error_message}), 400
     
+    except jwt.ExpiredSignatureError:
+        error_message = str("Session expired. Please login again.")
+        print(error_message)
+        return jsonify({'msg': error_message}), 401
+    
     return jsonify({
         'msg': "Successfully scanned image",
         "data": result
@@ -57,6 +62,11 @@ def get_types():
         error_message = str(e.message)
         print(error_message)
         return jsonify({'msg': error_message}), 400
+    
+    except jwt.ExpiredSignatureError:
+        error_message = str("Session expired. Please login again.")
+        print(error_message)
+        return jsonify({'msg': error_message}), 401
     
     return jsonify({
         'msg': "Successfully retrieved types",
