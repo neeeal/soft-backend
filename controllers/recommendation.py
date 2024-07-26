@@ -37,6 +37,8 @@ def get_types():
     results = []
     for stress_doc in stress_docs:
         stress_doc["_id"] = str(stress_doc["_id"])
+        stress_doc["stress_name"] = stress_doc["stress_name"].title()
+        stress_doc["stress_type"] = stress_doc["stress_type"].title()
         stress_doc["recommendation"] = stress_doc["recommendation"].replace("\\n", "\n\n")
         stress_doc["description"] = stress_doc["description"].replace("\\n", "\n\n")
         stress_doc["rice_image"] = str(base64.b64encode(stress_doc["rice_image"]).decode('utf-8'))
@@ -99,6 +101,8 @@ def get_recommendation(DATA):
     }
     
     stress_doc = stressCol.find_one(query, {"_id": 0, "stress_id": 0, "rice_image": 0})
+    stress_doc["stress_name"] = stress_doc["stress_name"].title()
+    stress_doc["stress_type"] = stress_doc["stress_type"].title()
     stress_doc["recommendation"] = stress_doc["recommendation"].replace("\\n", "\n\n")
     stress_doc["description"] = stress_doc["description"].replace("\\n", "\n\n")
     print("sucesss types retrieval")

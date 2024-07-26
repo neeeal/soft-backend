@@ -57,6 +57,8 @@ def get_latest_home_data(data):
     
     for stress in stress_cursor:
         stress["_id"] = str(stress["_id"])
+        stress["stress_type"] = stress["stress_type"].title()
+        stress["stress_name"] = stress["stress_name"].title()
         stress["rice_image"] = str(base64.b64encode(stress["rice_image"]).decode('utf-8'))
         stress["recommendation"] = stress["recommendation"].replace("\\n", "\n\n")
         stress["description"] = stress["description"].replace("\\n", "\n\n")
@@ -71,8 +73,6 @@ def get_latest_home_data(data):
         print(history["stress_id"]-1)
         stress = stresses[history["stress_id"]-1]
         
-        history["stress_type"] = stress["stress_type"]
-        history["stress_name"] = stress["stress_name"]
         history["stress_level"] = stress["stress_level"]
         history["description"] = stress["description"].replace("\\n", "\n\n")
         history["recommendation"] = stress["recommendation"].replace("\\n", "\n\n")
@@ -127,8 +127,8 @@ def get_stress(data):
         print(result["stress_id"]-1)
         stress = stresses[result["stress_id"]-1]
         
-        result["stress_type"] = stress["stress_type"]
-        result["stress_name"] = stress["stress_name"]
+        result["stress_type"] = stress["stress_type"].title()
+        result["stress_name"] = stress["stress_name"].title()
         result["stress_level"] = stress["stress_level"]
         result["description"] = stress["description"].replace("\\n", "\n\n")
         result["recommendation"] = stress["recommendation"].replace("\\n", "\n\n")
@@ -175,10 +175,12 @@ def get_history_with_images(data):
         result["_id"] = str(result["_id"])
         result["rice_image"] = str(base64.b64encode(result["rice_image"]).decode('utf-8'))
         
+        result['date_transaction'] = result['date_transaction'].strftime("%B %d, %Y %H:%M")
+        
         stress = stresses[result["stress_id"]-1]
         
-        result["stress_type"] = stress["stress_type"]
-        result["stress_name"] = stress["stress_name"]
+        result["stress_type"] = stress["stress_type"].title()
+        result["stress_name"] = stress["stress_name"].title()
         result["stress_level"] = stress["stress_level"]
         result["description"] = stress["description"].replace("\\n", "\n\n")
         result["recommendation"] = stress["recommendation"].replace("\\n", "\n\n")
