@@ -134,7 +134,7 @@ def login(data):
         "password": hashed_password,
         "deleted_at": None
     }
-    exists = usersCol.find_one(query, {"password": 0})
+    exists = usersCol.find_one(query, {"password": 0, "image":0})
     
     if not exists:
         raise validation.InvalidCredentialsException("Client Error. Invalid user credentials.")
