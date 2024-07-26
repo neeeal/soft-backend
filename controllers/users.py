@@ -88,7 +88,7 @@ def signup(data):
         user_doc = {
             "username": username,
             "password": password,
-            "email": email,
+            "email": email.lower(),
             "first_name": data['first_name'],
             "last_name": data['last_name'],
             "contact": contact,
@@ -129,7 +129,7 @@ def login(data):
     query = {
         "$or" : [
             {"username": user},
-            {"email": user},
+            {"email": user.lower()},
         ],
         "password": hashed_password,
         "deleted_at": None
@@ -194,7 +194,7 @@ def update_user(data):
     value = data["value"]
     
     if field == "email":
-        value = validation.email_format(value)
+        value = validation.email_format(value).lower()
     elif field == "username":
         value = validation.username_format(value)
     elif field == "contact":
@@ -290,6 +290,7 @@ def get_user(data):
 
     is_not_login(data)
     
-    exists["image"] = str(base64.b64encode(exists["image"]).decode('utf-8'))
+    if exists['image']:
+        exists["image"] = str(base64.b64encode(exists["image"]).decode('utf-8'))
     
     return exists
