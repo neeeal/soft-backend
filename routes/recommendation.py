@@ -4,6 +4,7 @@ import controllers.recommendation as recommendationController
 import middlewares.validation as validation
 import dotenv
 from helpers.utils import is_not_login
+import jwt
 
 ## Loading Envieronment Variables
 dotenv.load_dotenv()
