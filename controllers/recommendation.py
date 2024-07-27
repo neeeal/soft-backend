@@ -49,7 +49,7 @@ def get_types():
 
 # Define the function to handle the KerasLayer when loading the model
 def get_recommendation(DATA):
-    
+    print("STARTED............................................")
     if len(DATA['image'].strip().split(',')) == 2:
         extension, file = DATA['image'].strip().split(',')
         if extension not in ['data:image/png;base64','data:image/jpeg;base64','data:image/jpg;base64'] : 
@@ -86,10 +86,13 @@ def get_recommendation(DATA):
     rice_image = image_data
 
     ## Model prediction
+    print("LOADING MODEL............................................")
     global model
     if model == None:
         model = recommendation_helper.load_m()
+    print("FIINISHED LOADING, PREDICTING............................................")
     data = recommendation_helper.preprocessData(data)
+    print("FIINISHED PREDICTING............................................")
     result = np.argmax(model(data))+1
 
     ## Getting Recommendation using output from model

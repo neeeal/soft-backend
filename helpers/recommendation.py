@@ -24,10 +24,14 @@ def load_m():
     model.add(tf.keras.layers.Dense(10, activation='softmax'))
     model.compile(optimizer=tf.keras.optimizers.RMSprop(1e-4), loss='categorical_crossentropy', metrics=['accuracy'])
     url = 'https://drive.google.com/drive/folders/1ptqlr_T0XRs88FAoucKSf7pxcEixRZ9O'
+    print("DOWNLOADING............................................")
     gdown.download_folder(url, quiet=True, use_cookies=False)
+    print("LOADING WEIGHTS............................................")
     model.load_weights(filepath='model_weights/')
+    print("DONE, NOW LAYERS............................................")
     for layer in model.layers:
         layer.trainable = False
+    print("LAYERS DONE............................................")
     return model
 
 def preprocessData(data, image_size = 384):
