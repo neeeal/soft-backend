@@ -117,15 +117,15 @@ def update_user():
         print(error_message)
         return jsonify({'msg': error_message}), 401
     
-    except Exception as e:
-        print("Unhandled exception")
-        print(str(e))
-        return jsonify({'msg': "Internal server error"}), 500
-    
     except jwt.ExpiredSignatureError:
         error_message = str("Session expired. Please login again.")
         print(error_message)
         return jsonify({'msg': error_message}), 401
+    
+    except Exception as e:
+        print("Unhandled exception")
+        print(str(e))
+        return jsonify({'msg': "Internal server error"}), 500
     
     return jsonify({
             'msg': "Succesfully updated user.",

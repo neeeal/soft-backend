@@ -186,82 +186,6 @@ def login(data):
     
     return finalData
 
-def update_user(data):
-    field = data["field"].lower()
-    value = data["value"]
-    
-    if field == "email":
-        value = validation.email_format(value).lower()
-    elif field == "username":
-        value = validation.username_format(value)
-    elif field == "contact":
-        value = validation.contact_format(value)
-    elif field == "password":
-        value = validation.secure_password(value)
-        hash = value + SECRET_KEY
-        hash = hashlib.sha1(hash.encode())
-        value = hash.hexdigest()
-    elif field == "image":
-        # Split the value to check for file type and base64 data
-        parts = value.strip().split(',')
-        
-        if len(parts) == 2:
-            extension, file = parts
-            if extension not in ['data:image/png;base64', 'data:image/jpeg;base64', 'data:image/jpg;base64']:
-                return "Invalid file type. Submit only .jpg, .png, or .jpeg files."
-        else:
-            file = value.strip()
-        
-        # Handle base64 padding
-        padding = len(file) % 4
-        if padding:
-            file += '=' * (4 - padding)
-        
-        try:
-            image_data = base64.b64decode(file)
-        except (base64.binascii.Error, ValueError) as e:
-            return "Invalid image data. Could not decode base64."
-        
-        # Load the image, convert, and resize
-        try:
-            image_stream = BytesIO(image_data)
-            pil_image = Image.open(image_stream).convert('RGB')
-        except (IOError, ValueError) as e:
-            return "Invalid image file."
-        
-        # Calculate new size maintaining the aspect ratio
-        width, height = pil_image.size
-        if width > height:
-            new_width = 224
-            new_height = int((height / width) * 224)
-        else:
-            new_height = 224
-            new_width = int((width / height) * 224)
-        
-        save_image = pil_image.resize((new_width, new_height))
-        image_stream = BytesIO()
-        save_image.save(image_stream, format='JPEG')
-        image_data = image_stream.getvalue()
-
-        # Prepare image data for saving
-        value = image_data
-    
-    update_query = { 
-        "_id": ObjectId(data["_id"]),
-        "deleted_at": None
-    }
-    
-    new_value = {
-        "$set": {
-            field: value,
-            "updated_at": datetime.now()
-        }
-    }
-    
-    result = usersCol.update_one(update_query, new_value)
-    
-    return result.acknowledged
-
 def logout(data):
     
     existing_token = is_not_login(data)
@@ -291,3 +215,122 @@ def get_user(data):
         exists["image"] = str(base64.b64encode(exists["image"]).decode('utf-8'))
     
     return exists
+
+
+def update_user(data):
+    print(data)
+    field = data["field"]
+    value = data["value"]
+    
+    query = {
+        "_id": ObjectId(data["_id"]),
+        "deleted_at": None
+    }
+    exists = usersCol.find_one(query,{ "_id": 0})
+    if field[0] in ["password", "image"]:
+        field = field[0]
+        value = value[0]
+        if field == "password":
+            print(data)
+            value = validation.secure_password()
+            
+            old_password = data["old_password"]
+            new_password = value
+            new_password_confirmation = data["new_password_confirmation"]
+
+            # Verify the old password
+            old_password_hash = hashlib.sha1((old_password + SECRET_KEY).encode()).hexdigest()
+            if exists["password"] != old_password_hash:
+                raise validation.IncorrectOldPasswordException("Client Error. Incorrect old password.")
+
+            # Verify new password and confirmation
+            if new_password != new_password_confirmation:
+                raise validation.PasswordNotSameException("Client Error. New password and confirmation do not match.")
+
+            # Hash the new password
+            new_password_hash = hashlib.sha1((new_password + SECRET_KEY).encode()).hexdigest()
+            value = new_password_hash
+            
+        elif field == "image":
+            # Split the value to check for file type and base64 data
+            parts = value.strip().split(',')
+            
+            if len(parts) == 2:
+                extension, file = parts
+                if extension not in ['data:image/png;base64', 'data:image/jpeg;base64', 'data:image/jpg;base64']:
+                    return "Invalid file type. Submit only .jpg, .png, or .jpeg files."
+            else:
+                file = value.strip()
+            
+            # Handle base64 padding
+            padding = len(file) % 4
+            if padding:
+                file += '=' * (4 - padding)
+            
+            try:
+                image_data = base64.b64decode(file)
+            except (base64.binascii.Error, ValueError) as e:
+                return "Invalid image data. Could not decode base64."
+            
+            # Load the image, convert, and resize
+            try:
+                image_stream = BytesIO(image_data)
+                pil_image = Image.open(image_stream).convert('RGB')
+            except (IOError, ValueError) as e:
+                return "Invalid image file."
+            
+            # Calculate new size maintaining the aspect ratio
+            width, height = pil_image.size
+            if width > height:
+                new_width = 224
+                new_height = int((height / width) * 224)
+            else:
+                new_height = 224
+                new_width = int((width / height) * 224)
+            
+            save_image = pil_image.resize((new_width, new_height))
+            image_stream = BytesIO()
+            save_image.save(image_stream, format='JPEG')
+            image_data = image_stream.getvalue()
+
+            # Prepare image data for saving
+            value = image_data
+            
+        update_query = { 
+            "_id": ObjectId(data["_id"]),
+            "deleted_at": None
+        }
+        
+        new_value = {
+            "$set": {
+                field: value,
+                "updated_at": datetime.now()
+            }
+        }
+        
+        result = usersCol.update_one(update_query, new_value)
+        
+    else: 
+        update_query = { 
+            "_id": ObjectId(data["_id"]),
+            "deleted_at": None
+        }
+        new_value = {"$set":{"updated_at": datetime.now()}}
+        
+        for idx,f in enumerate(data["field"]):
+            value = data["value"][idx]
+            if f == "email":
+                value = validation.email_format(value).lower()
+            elif f == "username":
+                value = validation.username_format(value)
+            elif f == "contact":
+                value = validation.contact_format(value)
+                
+            new_value["$set"][f] = value
+            
+        print(new_value)
+        print(update_query)
+        result = usersCol.update_one(update_query, new_value)
+
+        
+    return result.acknowledged

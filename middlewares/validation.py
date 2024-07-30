@@ -26,6 +26,12 @@ class InvalidCredentialsException(CustomException):
 class InvalidLoginTokenException(CustomException):
     pass
 
+class IncorrectOldPasswordException(CustomException):
+    pass
+
+class PasswordNotSameException(CustomException):
+    pass
+
 # class AlreadyLoggedInException(CustomException):
 #     def __init__(self, data):
 #         self.token = data["token"]
