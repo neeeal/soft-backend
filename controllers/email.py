@@ -3,6 +3,7 @@ import dotenv
 import time
 import os
 import jwt
+import hashlib
 import middlewares.validation as validation
 from datetime import datetime
 from bson.objectid import ObjectId
@@ -25,7 +26,7 @@ usersCol = db["users"]
 blacklistCol = db["blacklist"]
 
 def forgot_password(EMAIL, mail, DATA):
-    recipient = DATA["email"]
+    recipient = DATA["email"].lower()
 
     query = {
         "email": recipient,
@@ -43,7 +44,7 @@ def forgot_password(EMAIL, mail, DATA):
         "purpose": "forgot_password"
     }
     
-    existing_token = list(blacklistCol.find(query).sort("created_at", -1))
+    existing_token = list(blacklistCol.find(query).sort("created_at", -1).limit(1))
     if len(existing_token):    
         existing_token = existing_token[0]
         
@@ -85,19 +86,60 @@ def forgot_password(EMAIL, mail, DATA):
     return None
 
 def reset_password(EMAIL, mail, DATA):
-    recipient = DATA["email"]
+    jwt_token = DATA["token"]
+    password = DATA["new_password"]
 
     query = {
-        "email": recipient,
+        "token": jwt_token,
+        "deleted_at": None,
+        "purpose": "forgot_password"
+    }
+    
+    existing_token = list(blacklistCol.find(query).sort("created_at", -1).limit(1))
+    
+    if len(existing_token):    
+        existing_token = existing_token[0]
+        decoded_token = jwt.decode(existing_token["token"], PRIVATE_KEY, algorithms=["HS256"])
+
+    else:
+        raise validation.InvalidCredentialsException("Client Error. Token does not exist.")
+    
+    update_query = { "token": existing_token["token"] }
+    new_value = { "$set": { "deleted_at": datetime.now() } }
+    result = blacklistCol.update_one(update_query, new_value)
+    
+    query = {
+        "_id": existing_token["user"],
         "deleted_at": None
     }
 
     user_doc = usersCol.find_one(query)
+    
+    update_query = { 
+        "_id": ObjectId(user_doc["_id"]),
+        "deleted_at": None
+    }
+    
+    value = validation.secure_password(password)
+    hash = value + SECRET_KEY
+    hash = hashlib.sha1(hash.encode())
+    hashed_password = hash.hexdigest()
+    
+    new_value = {
+        "$set": {
+            "password": hashed_password,
+            "updated_at": datetime.now()
+        }
+    }
+    
+    result = usersCol.update_one(update_query, new_value)
 
     if user_doc is None:
         raise validation.InvalidCredentialsException("Client Error. User does not exist.")
     
     msg = Message(subject='Successful reset',
-                    sender=EMAIL, recipients=[recipient])
+                    sender=EMAIL, recipients=[user_doc["email"]])
     msg.body = "Your password has been reset. Please try logging in again."
     mail.send(msg)
+    
+    return None
