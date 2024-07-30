@@ -8,6 +8,7 @@ import middlewares.validation as validation
 from datetime import datetime
 from bson.objectid import ObjectId
 from flask_mail import Message
+from flask import render_template_string
 
 dotenv.load_dotenv()
 MONGODB_URL = os.getenv('MONGODB_URL')
@@ -78,9 +79,13 @@ def forgot_password(EMAIL, mail, DATA):
     # Insert blacklist document
     result = blacklistCol.insert_one(blacklist_doc)
     
-    msg = Message(subject='Password reset',
-                    sender=EMAIL, recipients=[recipient])
-    msg.body = "Please follow this link to reset your password. {}".format(jwt_token)
+    reset_link = f"http://localhost:3000/reset_password/{jwt_token}"
+    html_body = render_template_string(open('html/forgot_password.html').read(), reset_link=reset_link)
+
+    msg = Message(subject='Password Reset',
+                  sender=EMAIL,
+                  recipients=[recipient])
+    msg.html = html_body
     mail.send(msg)
     
     return None
@@ -133,13 +138,19 @@ def reset_password(EMAIL, mail, DATA):
     }
     
     result = usersCol.update_one(update_query, new_value)
+    
+    recipient = user_doc["email"]
 
     if user_doc is None:
         raise validation.InvalidCredentialsException("Client Error. User does not exist.")
     
-    msg = Message(subject='Successful reset',
-                    sender=EMAIL, recipients=[user_doc["email"]])
-    msg.body = "Your password has been reset. Please try logging in again."
+    html_body = render_template_string(open('html/reset_password_success.html').read())
+
+    msg = Message(subject='Password Successfully Changed',
+                  sender=EMAIL,
+                  recipients=[recipient])
+    msg.html = html_body
     mail.send(msg)
     
     return None
+ 
