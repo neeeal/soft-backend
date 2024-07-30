@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_mail import Mail
 from flask_cors import CORS
 import os
