@@ -79,7 +79,7 @@ def forgot_password(EMAIL, mail, DATA):
     # Insert blacklist document
     result = blacklistCol.insert_one(blacklist_doc)
     
-    reset_link = f"http://localhost:3000/reset_password/{jwt_token}"
+    reset_link = f"https://skanin-app-waac-67is352ww-neeeals-projects.vercel.app/reset_password/{jwt_token}"
     html_body = render_template_string(open('html/forgot_password.html').read(), reset_link=reset_link)
 
     msg = Message(subject='Password Reset',
