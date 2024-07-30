@@ -146,7 +146,8 @@ def login(data):
     # Check if login token exists
     query = {
         "user": ObjectId(exists["_id"]),
-        "deleted_at": None
+        "deleted_at": None,
+        "purpose": "login"
     }
     existing_token = list(blacklistCol.find(query).sort("created_at", -1).limit(1))
     if len(existing_token):    
@@ -154,13 +155,8 @@ def login(data):
         
         try:
             is_expired = jwt.decode(existing_token["token"], PRIVATE_KEY, algorithms=["HS256"])
-            # exists["msg"] = "User is already logged in."
             exists["token"] = existing_token["token"]
             return exists
-            # raise validation.AlreadyLoggedInException({
-            #     "token": existing_token["token"],
-            #     "message": "Client Error. User is already logged in."
-            #     })
         except jwt.ExpiredSignatureError:
             print("jwt.ExpiredSignatureError")
     
@@ -178,7 +174,8 @@ def login(data):
         "token": jwt_token,
         "created_at": datetime.now(),
         "updated_at": datetime.now(),
-        "deleted_at": None
+        "deleted_at": None,
+        "purpose": "login"
     }
     
     # Insert blacklist document
