@@ -328,6 +328,15 @@ def update_user(data):
                 
             new_value["$set"][f] = value
             
+            check_query = {
+                "_id": { "$ne": ObjectId(data["_id"]) }, 
+                f: value,                   
+                "deleted_at": None    
+            }
+            exists = usersCol.find_one(check_query)
+            if (exists):
+                raise validation.AccountExistsException("Client Error, {} already taken.".format(f))
+            
         print(new_value)
         print(update_query)
         result = usersCol.update_one(update_query, new_value)

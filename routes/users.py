@@ -122,6 +122,11 @@ def update_user():
         print(error_message)
         return jsonify({'msg': error_message}), 401
     
+    except validation.AccountExistsException as e:
+        error_message = str(e.message)
+        print(error_message)
+        return jsonify({'msg': error_message}), 400
+    
     except Exception as e:
         print("Unhandled exception")
         print(str(e))
