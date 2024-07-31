@@ -232,7 +232,7 @@ def update_user(data):
         value = value[0]
         if field == "password":
             print(data)
-            value = validation.secure_password()
+            value = validation.secure_password(value)
             
             old_password = data["old_password"]
             new_password = value
