@@ -27,6 +27,7 @@ def is_not_login(data):
     query = {
         "user": ObjectId(data["_id"]),
         "token": token,
+        "purpose": "login",
         "deleted_at": None
     }
     existing_token = blacklistCol.find_one(query)

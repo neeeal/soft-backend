@@ -34,6 +34,7 @@ def get_latest_home_data(data):
     
     history_query = {
         "user": ObjectId(data["user_id"]),
+        "purpose": "login",
         "deleted_at": None
     }
     history_cursor = historyCol.find(history_query).sort("date_transaction", -1).limit(3)
@@ -92,6 +93,7 @@ def get_stress(data):
     blacklist_query = {
         "user": data["user_id"],
         "token": data["token"],
+        "purpose": "login",
         "deleted_at": None
     }
     token = blacklistCol.find(blacklist_query)
@@ -143,6 +145,7 @@ def get_history_with_images(data):
     blacklist_query = {
         "user": data["user_id"],
         "token": data["token"],
+        "purpose": "login",
         "deleted_at": None
     }
     token = blacklistCol.find(blacklist_query)
