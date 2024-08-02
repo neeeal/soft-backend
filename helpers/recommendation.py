@@ -4,34 +4,45 @@ import gdown
 import cv2
 import numpy as np
 
+# def load_m():
+#     target_size = (384, 384)
+#     efficientnetv2 = tf.keras.applications.efficientnet_v2.EfficientNetV2S(
+#                     include_top=False,
+#                     weights='imagenet',
+#                     input_tensor=None,
+#                     input_shape=target_size+(3,),
+#                     pooling='avg',
+#                 )
+#     # Create a new model on top of EfficientNetV2
+#     model = tf.keras.Sequential()
+#     model.add(efficientnetv2)
+#     model.add(tf.keras.layers.Flatten())
+#     model.add(tf.keras.layers.BatchNormalization())
+#     model.add(tf.keras.layers.Dense(1024, activation = 'relu'))
+#     model.add(tf.keras.layers.Dropout(0.3))
+#     model.add(tf.keras.layers.Dense(1024, activation = 'relu'))
+#     model.add(tf.keras.layers.Dense(10, activation='softmax'))
+#     model.compile(optimizer=tf.keras.optimizers.RMSprop(1e-4), loss='categorical_crossentropy', metrics=['accuracy'])
+#     url = 'https://drive.google.com/drive/folders/1ptqlr_T0XRs88FAoucKSf7pxcEixRZ9O'
+#     print("DOWNLOADING............................................")
+#     gdown.download_folder(url, quiet=True, use_cookies=False)
+#     print("LOADING WEIGHTS............................................")
+#     model.load_weights(filepath='model_weights/')
+#     print("DONE, NOW LAYERS............................................")
+#     for layer in model.layers:
+#         layer.trainable = False
+#     print("LAYERS DONE............................................")
+#     return model
+
 def load_m():
-    target_size = (384, 384)
-    efficientnetv2 = tf.keras.applications.efficientnet_v2.EfficientNetV2S(
-                    include_top=False,
-                    weights='imagenet',
-                    input_tensor=None,
-                    input_shape=target_size+(3,),
-                    pooling='avg',
-                )
-    # Create a new model on top of EfficientNetV2
-    model = tf.keras.Sequential()
-    model.add(efficientnetv2)
-    model.add(tf.keras.layers.Flatten())
-    model.add(tf.keras.layers.BatchNormalization())
-    model.add(tf.keras.layers.Dense(1024, activation = 'relu'))
-    model.add(tf.keras.layers.Dropout(0.3))
-    model.add(tf.keras.layers.Dense(1024, activation = 'relu'))
-    model.add(tf.keras.layers.Dense(10, activation='softmax'))
-    model.compile(optimizer=tf.keras.optimizers.RMSprop(1e-4), loss='categorical_crossentropy', metrics=['accuracy'])
-    url = 'https://drive.google.com/drive/folders/1ptqlr_T0XRs88FAoucKSf7pxcEixRZ9O'
-    print("DOWNLOADING............................................")
+    target_size = (384,384)
+    print("DOWNLOADING...")
+    # url = 'https://drive.google.com/drive/folders/1ptqlr_T0XRs88FAoucKSf7pxcEixRZ9O'
+    url = "https://drive.google.com/drive/folders/1Q7ar1yEFaEPcVSlLHCHEoRRHinM8EG6o"
     gdown.download_folder(url, quiet=True, use_cookies=False)
-    print("LOADING WEIGHTS............................................")
-    model.load_weights(filepath='model_weights/')
-    print("DONE, NOW LAYERS............................................")
-    for layer in model.layers:
-        layer.trainable = False
-    print("LAYERS DONE............................................")
+    print("LOADING MODEL...")
+    model = tf.keras.models.load_model("models/model.h5")
+    print("FINISHED...")
     return model
 
 def preprocessData(data, image_size = 384):
